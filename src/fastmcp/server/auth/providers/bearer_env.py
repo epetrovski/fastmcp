@@ -50,6 +50,7 @@ class EnvBearerAuthProvider(BearerAuthProvider):
             algorithm: Algorithm to use for verification (optional)
             audience: Expected audience claim (optional)
             required_scopes: List of required scopes for access (optional)
+            required_roles: List of required scopes for access (optional)
         """
         kwargs = {
             "public_key": public_key,
