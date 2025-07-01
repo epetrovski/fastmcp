@@ -93,6 +93,7 @@ class RSAKeyPair:
         issuer: str = "https://fastmcp.example.com",
         audience: str | list[str] | None = None,
         scopes: list[str] | None = None,
+        roles: list[str] | None = None,
         expires_in_seconds: int = 3600,
         additional_claims: dict[str, Any] | None = None,
         kid: str | None = None,
@@ -106,6 +107,7 @@ class RSAKeyPair:
             issuer: Issuer claim
             audience: Audience claim - can be a string or list of strings (optional)
             scopes: List of scopes to include
+            roles: List of roles to include
             expires_in_seconds: Token expiration time in seconds
             additional_claims: Any additional claims to include
             kid: Key ID for JWKS lookup (optional)
@@ -131,6 +133,9 @@ class RSAKeyPair:
 
         if scopes:
             payload["scope"] = " ".join(scopes)
+
+        if roles:
+            payload["roles"] = " ".join(roles)
 
         if additional_claims:
             payload.update(additional_claims)
@@ -167,6 +172,7 @@ class BearerAuthProvider(OAuthProvider):
         algorithm: str | None = None,
         audience: str | list[str] | None = None,
         required_scopes: list[str] | None = None,
+        required_roles: list[str] | None = None,
     ):
         """
         Initialize the provider. Either public_key or jwks_uri must be provided.
@@ -178,6 +184,7 @@ class BearerAuthProvider(OAuthProvider):
             algorithm: Algorithm to use for verification (optional, defaults to RS256)
             audience: Expected audience claim - can be a string or list of strings (optional)
             required_scopes: List of required scopes for access (optional)
+            required_roles: List of required roles for access (optional)
         """
         if not (public_key or jwks_uri):
             raise ValueError("Either public_key or jwks_uri must be provided")
@@ -215,6 +222,7 @@ class BearerAuthProvider(OAuthProvider):
             client_registration_options=ClientRegistrationOptions(enabled=False),
             revocation_options=RevocationOptions(enabled=False),
             required_scopes=required_scopes,
+            required_roles=required_roles,
         )
 
         self.algorithm = algorithm
@@ -382,12 +390,16 @@ class BearerAuthProvider(OAuthProvider):
                     return None
 
             # Extract scopes
-            scopes = self._extract_scopes(claims)
+            scopes = self._extract_claim(claims, "scope")
+
+            # Extract roles
+            roles = self._extract_claim(claims, "roles")
 
             return AccessToken(
                 token=token,
                 client_id=str(client_id),
                 scopes=scopes,
+                roles=roles,
                 expires_at=int(exp) if exp else None,
             )
 
@@ -398,9 +410,9 @@ class BearerAuthProvider(OAuthProvider):
             self.logger.debug("Token validation failed: %s", str(e))
             return None
 
-    def _extract_scopes(self, claims: dict[str, Any]) -> list[str]:
-        """Extract scopes from JWT claims."""
-        scope_claim = claims.get("scope", "")
+    def _extract_claim(self, claims: dict[str, Any], claim_type: str) -> list[str]:
+        """Extract scopes or roles from JWT claims."""
+        scope_claim = claims.get(claim_type, "")
         if isinstance(scope_claim, str):
             return scope_claim.split()
         elif isinstance(scope_claim, list):
@@ -454,6 +466,7 @@ class BearerAuthProvider(OAuthProvider):
         client: OAuthClientInformationFull,
         refresh_token: RefreshToken,
         scopes: list[str],
+        roles: list[str],
     ) -> OAuthToken:
         raise NotImplementedError("Refresh token exchange not supported")
 

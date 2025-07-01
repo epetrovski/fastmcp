@@ -21,6 +21,7 @@ class OAuthProvider(
         client_registration_options: ClientRegistrationOptions | None = None,
         revocation_options: RevocationOptions | None = None,
         required_scopes: list[str] | None = None,
+        required_roles: list[str] | None = None,
     ):
         """
         Initialize the OAuth provider.
@@ -31,6 +32,7 @@ class OAuthProvider(
             client_registration_options: The client registration options.
             revocation_options: The revocation options.
             required_scopes: Scopes that are required for all requests.
+            required_roles: Roles that are required for all requests.
         """
         super().__init__()
         if isinstance(issuer_url, str):
@@ -43,6 +45,7 @@ class OAuthProvider(
         self.client_registration_options = client_registration_options
         self.revocation_options = revocation_options
         self.required_scopes = required_scopes
+        self.required_roles = required_roles
 
     async def verify_token(self, token: str) -> AccessToken | None:
         """

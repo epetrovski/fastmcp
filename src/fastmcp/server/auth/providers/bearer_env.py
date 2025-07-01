@@ -20,6 +20,7 @@ class EnvBearerAuthProviderSettings(BaseSettings):
     algorithm: str | None = None
     audience: str | None = None
     required_scopes: list[str] | None = None
+    required_roles: list[str] | None = None
 
 
 class EnvBearerAuthProvider(BearerAuthProvider):
@@ -37,6 +38,7 @@ class EnvBearerAuthProvider(BearerAuthProvider):
         algorithm: str | None | EllipsisType = ...,
         audience: str | None | EllipsisType = ...,
         required_scopes: list[str] | None | EllipsisType = ...,
+        required_roles: list[str] | None | EllipsisType = ...,
     ):
         """
         Initialize the provider.
@@ -56,6 +58,7 @@ class EnvBearerAuthProvider(BearerAuthProvider):
             "algorithm": algorithm,
             "audience": audience,
             "required_scopes": required_scopes,
+            "required_roles": required_roles,
         }
         settings = EnvBearerAuthProviderSettings(
             **{k: v for k, v in kwargs.items() if v is not ...}
