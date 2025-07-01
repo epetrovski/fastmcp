@@ -392,14 +392,23 @@ class BearerAuthProvider(OAuthProvider):
             # Extract scopes
             scopes = self._extract_claim(claims, "scope")
 
-            # Extract roles
-            roles = self._extract_claim(claims, "roles")
+            # Validate required roles if configured
+            if self.required_roles:
+                roles = self._extract_claim(claims, "roles")
+
+                # Check if all required roles are present
+                if not all(role in roles for role in self.required_roles):
+                    self.logger.debug(
+                        "Token validation failed: missing required roles for client %s",
+                        client_id,
+                    )
+                    self.logger.info("Bearer token rejected for client %s", client_id)
+                    return None
 
             return AccessToken(
                 token=token,
                 client_id=str(client_id),
                 scopes=scopes,
-                roles=roles,
                 expires_at=int(exp) if exp else None,
             )
 
